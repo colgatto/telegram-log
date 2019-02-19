@@ -23,19 +23,16 @@ module.exports = (function (){
 
 	const send = (data) => {
 		for (let i = 0, l = data.options.receivers.length; i < l; i++) {
-			
-			let fullPath = data.path + '&chat_id=' + data.options.receivers[i];
 
 			let req = https.request({
 				host: 'api.telegram.org',
 				method: 'GET',
-				path: fullPath
+				path: data.path + '&chat_id=' + data.options.receivers[i]
 			});
+			
 			req.on('error',(err)=>{console.error(err);});
 			//req.on('data',(data)=>{console.log(data);});
 			req.end();
-
-			console.log('MANDO: ' + decodeURI(fullPath));
 		}
 	};
 	
@@ -51,16 +48,14 @@ module.exports = (function (){
 					+'</pre>'
 				) + '&parse_mode=HTML';
 				break;
-			//TODO
-			/*
 			case 'Markdown':
 				text = encodeURI(
-					'[' + dateformat(new Date(), options.dateformat) + '] ' + (options.name !== null ? options.name : '') + '\n'
-						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
-						+ text
-				);// + '&parse_mode=Markdown';
+					(options.name !== null ? '`' + options.name + '`\n' : '')
+					+ '`[' + dateformat(new Date(), options.dateformat) + ']`\n'
+					+ '`' + label + (code!=='' ? '(' + code + ')' : '') + '`\n'
+					+ text
+				) + '&parse_mode=Markdown';
 				break;
-			*/
 			default:
 				text = encodeURI(
 					'[' + dateformat(new Date(), options.dateformat) + '] ' + (options.name !== null ? options.name : '') + '\n'
