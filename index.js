@@ -1,71 +1,127 @@
 const https = require('https');
 const dateformat = require('dateformat');
 
-const send = (path) => {
-	let req = https.request({
-		host: 'api.telegram.org',
-		method: 'GET',
-		path
-	});
-	req.on('error',(err)=>{console.error(err);});
-	//req.on('data',(data)=>{console.log(data);});
-	req.end();
-};
+module.exports = (function (){
 
-module.exports = {
-	init: function(options){
-		this.token = options.token;
-		this.userId = options.userId;
-		this.name = typeof options.name !== 'undefined' ? options.name : null;
-		this.mode = typeof options.mode !== 'undefined' ? options.mode : 'text';
-		this.disable_web_page_preview = typeof options.disable_web_page_preview !== 'undefined' && options.disable_web_page_preview !== false;
-		this.disable_notification = typeof options.disable_notification !== 'undefined' && options.disable_notification !== false;
-		this.dateformat = typeof options.dateformat !== 'undefined' ? options.dateformat : 'd/mm/yyyy, HH:MM:ss';
+	const defaultOpt = {
+		token: '',
+		receivers: [],
+		name: null,
+		mode: 'text',
+		dateformat: 'd/mm/yyyy, HH:MM:ss',
+		disableLinkPreview: false,
+		silent: false,
+	};
+
+	this.init = (options) => {
+		if(typeof options.token === 'undefined') throw 'token required!'
+		if(typeof options.receivers === 'undefined') throw 'receivers required!'
+		if(typeof options.receivers === 'string') options.receivers = [options.receivers];
+		this.options = Object.assign( {}, defaultOpt, options);
 		return this;
-	},
-	pathMaker: function(label, text, code){
-		switch(this.mode){
-			case 'text':
+	};
+
+	const send = (data) => {
+		for (let i = 0, l = data.options.receivers.length; i < l; i++) {
+			
+			let fullPath = data.path + '&chat_id=' + data.options.receivers[i];
+
+			let req = https.request({
+				host: 'api.telegram.org',
+				method: 'GET',
+				path: fullPath
+			});
+			req.on('error',(err)=>{console.error(err);});
+			//req.on('data',(data)=>{console.log(data);});
+			req.end();
+
+			console.log('MANDO: ' + decodeURI(fullPath));
+		}
+	};
+	
+	const pathMaker = (label, text, code, options) => {
+		switch(options.mode){
+			case 'HTML':
 				text = encodeURI(
-					'[' + dateformat(new Date(),this.dateformat) + '] ' + (this.name !== null ? this.name : '') + '\n'
-						+ label + (code!==null ? '(' + code + ')' : '') + '\n'
-						+ text);
+					'<pre>'
+						+ (options.name !== null ? options.name + '\n' : '')
+						+ '[' + dateformat(new Date(), options.dateformat) + ']\n'
+						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
+						+ text
+					+'</pre>'
+				) + '&parse_mode=HTML';
 				break;
 			//TODO
 			/*
 			case 'Markdown':
 				text = encodeURI(
-					'[' + dateformat(new Date(),this.dateformat) + '] ' + (this.name !== null ? this.name : '') + '\n'
-						+ label + (code!==null ? '(' + code + ')' : '') + '\n'
+					'[' + dateformat(new Date(), options.dateformat) + '] ' + (options.name !== null ? options.name : '') + '\n'
+						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
 						+ text
 				);// + '&parse_mode=Markdown';
 				break;
 			*/
-			case 'HTML':
+			default:
 				text = encodeURI(
-					'<pre>'
-						+ (this.name !== null ? this.name : '') + '\n'
-						+ '[' + dateformat(new Date(),this.dateformat) + ']\n'
-						+ label + (code!==null ? '(' + code + ')' : '') + '\n'
-						+ text
-					+'</pre>'
-				) + '&parse_mode=HTML';
+					'[' + dateformat(new Date(), options.dateformat) + '] ' + (options.name !== null ? options.name : '') + '\n'
+						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
+						+ text);
 				break;
 		}
-		return '/bot' + this.token + '/sendMessage?chat_id=' + this.userId + '&text=' + text
-			+ (this.disable_web_page_preview ? '&disable_web_page_preview=1' : '')
-			+ (this.disable_web_page_preview ? '&disable_notification=1' : '');
-	},
-	info: function (text,code=null) {
-		send(this.pathMaker('INFO', text, code));
-	},
-	warning: function (text,code=null) {
-		send(this.pathMaker('WARNING', text, code));
-	},
-	error: function (text,code=null) {
-		send(this.pathMaker('ERROR', text, code));
-	},
-	debug: function (text,code=null) {
-		send(this.pathMaker('DEBUG', text, code));
-	},
-};
+		return {
+			path: '/bot' + options.token + '/sendMessage?text=' + text
+				+ (options.disableLinkPreview ? '&disable_web_page_preview=1' : '')
+				+ (options.silent ? '&disable_notification=1' : ''),
+			options
+		};
+	};
+	
+	const takeParameters = (code,options) => {
+		/*
+		botLog('ciao');
+		botLog('ciao',42);
+		botLog('ciao',{silent:true});
+		botLog('ciao',42,{silent:true});
+		*/
+		let finalC = '';
+		let finalOpt = {};
+		let codeIsOption = false;
+		if(code !== null){
+			if(typeof code === 'object'){
+				finalOpt = code;
+				codeIsOption = true;
+			}else{
+				finalC = parseInt(code);
+			}
+		}
+		if(options!=null && !codeIsOption){
+			finalOpt = options;
+		}
+		return {
+			code: finalC,
+			options: Object.assign({},this.options,finalOpt)
+		};
+	};
+
+	this.info = (text, code=null, options=null) => {
+		const param = takeParameters(code,options);
+		send(pathMaker('INFO', text, param.code, param.options));
+	};
+	
+	this.warning = (text,code=null, options=null) => {
+		const param = takeParameters(code,options);
+		send(pathMaker('WARNING', text, param.code, param.options));
+	};
+	
+	this.error = (text,code=null, options=null) => {
+		const param = takeParameters(code,options);
+		send(pathMaker('ERROR', text, param.code, param.options));
+	};
+	
+	this.debug = (text,code=null, options=null) => {
+		const param = takeParameters(code,options);
+		send(pathMaker('DEBUG', text, param.code, param.options));
+	};
+	
+	return this;
+})();

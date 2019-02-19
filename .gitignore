@@ -60,6 +60,5 @@ typings/
 # next.js build output
 .next
 
-# custom
-config.js
-prova.js
+# config
+example/config.js
