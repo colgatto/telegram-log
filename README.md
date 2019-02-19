@@ -1,3 +1,3 @@
-# telegram-botLog
+# telegram-log
 
 ## under development
