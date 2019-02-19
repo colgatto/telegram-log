@@ -2,7 +2,9 @@ const https = require('https');
 const dateformat = require('dateformat');
 
 module.exports = (function (){
-
+	
+	//#region PRIVATE
+	
 	const defaultOpt = {
 		token: '',
 		receivers: [],
@@ -13,26 +15,20 @@ module.exports = (function (){
 		silent: false,
 	};
 
-	this.init = (options) => {
-		if(typeof options.token === 'undefined') throw 'token required!'
-		if(typeof options.receivers === 'undefined') throw 'receivers required!'
-		if(typeof options.receivers === 'string') options.receivers = [options.receivers];
-		this.options = Object.assign( {}, defaultOpt, options);
-		return this;
-	};
-
 	const send = (data) => {
 		for (let i = 0, l = data.options.receivers.length; i < l; i++) {
-
+			
 			let req = https.request({
 				host: 'api.telegram.org',
 				method: 'GET',
 				path: data.path + '&chat_id=' + data.options.receivers[i]
 			});
-			
+
 			req.on('error',(err)=>{console.error(err);});
 			//req.on('data',(data)=>{console.log(data);});
 			req.end();
+			
+			//console.log('GET: https://api.telegram.org' + data.path + '&chat_id=' + data.options.receivers[i]);
 		}
 	};
 	
@@ -97,22 +93,59 @@ module.exports = (function (){
 			options: Object.assign({},this.options,finalOpt)
 		};
 	};
-
+	
+	//#endregion
+	
+	//#region PUBBLIC
+	
+	/**
+	 * initialize logger
+	 * @param {object} options option for the logger, options.token and options.receivers are required
+	 * @return {telegram-log}
+	 */
+	this.init = (options) => {
+		if(typeof options.token === 'undefined') throw 'token required!'
+		if(typeof options.receivers === 'undefined') throw 'receivers required!'
+		if(typeof options.receivers === 'string') options.receivers = [options.receivers];
+		this.options = Object.assign( {}, defaultOpt, options);
+		return this;
+	};
+	/**
+	 * send info to bot
+	 * @param {string} text message to log
+	 * @param {number} code log code (optional)
+	 * @param {object} options custom option for single-use (optional)
+	 */
 	this.info = (text, code=null, options=null) => {
 		const param = takeParameters(code,options);
 		send(pathMaker('INFO', text, param.code, param.options));
 	};
-	
+	/**
+	 * send warning to bot
+	 * @param {string} text message to log
+	 * @param {number} code log code (optional)
+	 * @param {object} options custom option for single-use (optional)
+	 */
 	this.warning = (text,code=null, options=null) => {
 		const param = takeParameters(code,options);
 		send(pathMaker('WARNING', text, param.code, param.options));
 	};
-	
+	/**
+	 * send error to bot
+	 * @param {string} text message to log
+	 * @param {number} code log code (optional)
+	 * @param {object} options custom option for single-use (optional)
+	 */
 	this.error = (text,code=null, options=null) => {
 		const param = takeParameters(code,options);
 		send(pathMaker('ERROR', text, param.code, param.options));
 	};
-	
+	/**
+	 * send debug log to bot
+	 * @param {string} text message to log
+	 * @param {number} code log code (optional)
+	 * @param {object} options custom option for single-use (optional)
+	 */
 	this.debug = (text,code=null, options=null) => {
 		const param = takeParameters(code,options);
 		send(pathMaker('DEBUG', text, param.code, param.options));

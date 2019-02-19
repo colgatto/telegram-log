@@ -35,15 +35,15 @@ const tLog = require('telegram-log');
 const options = {
 	token: 'TELEGRAM_BOT_TOKEN',
 	receivers: 'TELEGRAM_USER_ID',
-	dateformat: 'd/mm/yyyy, HH:MM:ss',
+	dateformat: 'd/mm/yy, H:MM:ss'
 };
 
 tLog.init(options);
 
 //you can add custom options just for the single log
 tLog.info('User login on https://facebook.com', { disableLinkPreview: true } );
-tLog.warning('Hardisk is almost full', { mode: 'HTML', silent:true });
-tLog.error('Internal Server Error', 500, { mode: 'HTML' } );
+tLog.warning('Hardisk is almost full', { mode: 'Markdown', silent: true } );
+tLog.error('Internal Server Error', 500, { mode: 'HTML'} );
 tLog.debug('hello guy', 123, { dateformat: 'dd/mm/yy' } );
 ```
 
@@ -54,7 +54,7 @@ tLog.debug('hello guy', 123, { dateformat: 'dd/mm/yy' } );
 | ------ | ------ | ------ | ------ |
 | token | string | telegram bot token (get your bot with [@botfather](https://t.me/botfather)) | required |
 | receivers | string/Array | users id that receive message, (get your id with with [@get_userId_bot](https://t.me/get_userId_bot)) | required |
-| mode | string| how format message, `"text"`,`"HTML"` are valid mode | optional (default `"text"`) |
+| mode | string| how format message, `"text"`,`"HTML"`,`"Markdown"` are valid mode | optional (default `"text"`) |
 | dateFormat   | string | string rappresent format of the date, use [dateformat](https://www.npmjs.com/package/dateformat) | optional (default `"d/mm/yyyy, HH:MM:ss"`) |
 | silent       | bool | send message without notification | optional (default `false`) |
 | disableLinkPreview  | bool | disable preLoad urls inside telegram chat | optional (default `false`) |
