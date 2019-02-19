@@ -1,0 +1,30 @@
+{
+  "name": "telegram-log",
+  "version": "0.1.0",
+  "description": "send log from your project directly on telegram, without backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/colgatto/telegram-log.git"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "logger",
+    "log",
+    "monitoring",
+    "realtime"
+  ],
+  "author": "colgatto",
+  "license": "RWTFPL",
+  "bugs": {
+    "url": "https://github.com/colgatto/telegram-log/issues"
+  },
+  "homepage": "https://github.com/colgatto/telegram-log#readme",
+  "dependencies": {
+    "dateformat": "^3.0.3"
+  }
+}
