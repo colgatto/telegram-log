@@ -1,7 +1,7 @@
 # telegram-log
 Send the log from your project directly on telegram, no backend or webHook needed!
 
-Can use two different template or you can easily create and use your own too.
+You can use two different template or you can easily create and use your own too.
 
 ## Install
 
@@ -61,16 +61,16 @@ tLog.debug('hello guy', { template: false } );
 | ------              | ------       | ------                                                                                              | ------ |
 | token               | string       | telegram bot token (get your bot's from [@botfather](https://t.me/botfather))                       | required |
 | receivers           | string/Array | user ids that will receive message, (get yours from [@get_userId_bot](https://t.me/get_userId_bot)) | required |
-| projectName         | string       | if you use same bot for many project or application                                                 | optional (default `""`) |
+| projectName         | string       | project name if you need to distinguish them when you use same bot for multiple projects or applications                                                  | optional (default `""`) |
 | mode                | string       | message format, can be `"text"`, `"html"`, `"markdown"`                                             | optional (default `"text"`) |
 | dateFormat          | string       | represents the format of the date, uses [dateformat](https://www.npmjs.com/package/dateformat)      | optional (default `"d/mm/yyyy, HH:MM:ss"`) |
 | silent              | bool         | send the message without a notification                                                             | optional (default `false`) |
 | disableLinkPreview  | bool         | disable preLoading urls inside the telegram chat                                                    | optional (default `false`) |
-| template            | string/bool  | can use to select template(`"default"` or `"minimal"`) or create your custom template, set it `false` to disable template | optional (default `"default"`) |
+| template            | string/bool  | can use to select template (`"default"` or `"minimal"`) or create your custom template, set it `false` to disable template | optional (default `"default"`) |
 
 ## Template
 
-If you don't like `default` or `minimal` template you can create and use your own template using the options's parameter.
+If you don't like the `default` or `minimal` templates you can create and use your own with the options's parameter.
 
 Use double curly braces to add variables to your template like `{{date}}` or `{{projectName}}`.
 
