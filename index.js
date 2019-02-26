@@ -1,5 +1,6 @@
 const https = require('https');
 const dateformat = require('dateformat');
+const template = require('./template.js');
 
 module.exports = (function (){
 	
@@ -8,11 +9,12 @@ module.exports = (function (){
 	const defaultOpt = {
 		token: '',
 		receivers: [],
-		name: null,
+		projectName: '',
 		mode: 'text',
 		dateformat: 'd/mm/yyyy, HH:MM:ss',
 		disableLinkPreview: false,
 		silent: false,
+		template: 'default'
 	};
 
 	const send = (data) => {
@@ -29,68 +31,96 @@ module.exports = (function (){
 			req.end();
 			
 			//console.log('GET: https://api.telegram.org' + data.path + '&chat_id=' + data.options.receivers[i]);
+			//console.log(decodeURI(data.path));
 		}
 	};
-	
-	const pathMaker = (label, text, code, options) => {
-		switch(options.mode){
-			case 'HTML':
-				text = encodeURI(
-					'<pre>'
-						+ (options.name !== null ? options.name + '\n' : '')
-						+ '[' + dateformat(new Date(), options.dateformat) + ']\n'
-						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
-						+ text
-					+'</pre>'
-				) + '&parse_mode=HTML';
-				break;
-			case 'Markdown':
-				text = encodeURI(
-					(options.name !== null ? '`' + options.name + '`\n' : '')
-					+ '`[' + dateformat(new Date(), options.dateformat) + ']`\n'
-					+ '`' + label + (code!=='' ? '(' + code + ')' : '') + '`\n'
-					+ text
-				) + '&parse_mode=Markdown';
-				break;
-			default:
-				text = encodeURI(
-					'[' + dateformat(new Date(), options.dateformat) + '] ' + (options.name !== null ? options.name : '') + '\n'
-						+ label + (code!=='' ? '(' + code + ')' : '') + '\n'
-						+ text);
-				break;
+
+	const typeToEmoji = (type) => {
+		switch(type){
+			case 'info':
+				return '\ud83d\udcac';
+			case 'warning':
+				return '\u26a0';
+			case 'error':
+				return '\u203c';
+			case 'debug':
+				return '\ud83d\udc1e';
+			}
+		return '';
+	};
+
+	const logFormatter = (text, code, options) => {
+		let r = '';
+		const templateValue = {
+			text: text,
+			code: code,
+			projectName: options.projectName,
+			date: dateformat(new Date(), options.dateformat),
+			type: options.type,
+			emojiType: typeToEmoji(options.type)
 		}
+		if(options.template){
+			let t = typeof template[options.template] !== "undefined"
+				? template[options.template][options.mode]
+				: options.template;
+			for(tv in templateValue){
+				t = t.replace(
+					new RegExp('\{\{' + tv + '\}\}','g'),
+					(templateValue[tv]).replace(/{/g,'\\{').replace(/}/g,'\\}')
+				);
+			}
+			t = t.replace(/\\{/g,'{').replace(/\\}/g,'}');
+			return encodeURI(t);
+		}else{
+			return encodeURI(text);
+		}
+	};
+
+	const pathMaker = (text, code, options) => {
+		const initPath =  '/bot' + options.token + '/sendMessage?text=' + logFormatter(text, code, options);
+		const additionalBlock = [{
+			cond: options.disableLinkPreview,
+			val: 'disable_web_page_preview=1'
+		},{
+			cond: options.silent,
+			val: 'disable_notification=1'
+		},{
+			cond: options.mode === 'markdown',
+			val: 'parse_mode=Markdown'
+		},{
+			cond: options.mode === 'html',
+			val: 'parse_mode=HTML'
+		}];
+		const restOfPath = additionalBlock.filter(x=>x.cond).map(x=>x.val).join('&');
 		return {
-			path: '/bot' + options.token + '/sendMessage?text=' + text
-				+ (options.disableLinkPreview ? '&disable_web_page_preview=1' : '')
-				+ (options.silent ? '&disable_notification=1' : ''),
+			path: restOfPath.length > 0 ? initPath + '&' + restOfPath : initPath,
 			options
 		};
 	};
 	
-	const takeParameters = (code,options) => {
-		/*
-		botLog('ciao');
-		botLog('ciao',42);
-		botLog('ciao',{silent:true});
-		botLog('ciao',42,{silent:true});
-		*/
+	const takeParameters = (code, options, type) => {
 		let finalC = '';
-		let finalOpt = {};
+		let customOpt = {};
 		let codeIsOption = false;
 		if(code !== null){
 			if(typeof code === 'object'){
-				finalOpt = code;
+				customOpt = code;
 				codeIsOption = true;
 			}else{
-				finalC = parseInt(code);
+				finalC = code + '';
 			}
 		}
 		if(options!=null && !codeIsOption){
-			finalOpt = options;
+			customOpt = options;
 		}
+		let finalOpt = Object.assign({}, this.options, customOpt, { type: type } );
+		let lowMode = finalOpt.mode.toLowerCase();
+		if(lowMode === 'html') finalOpt.mode = 'html';
+		else if(lowMode === 'markdown') finalOpt.mode = 'markdown';
+		else finalOpt.mode = 'text';
 		return {
 			code: finalC,
-			options: Object.assign({},this.options,finalOpt)
+			options: finalOpt
 		};
 	};
 	
@@ -111,45 +141,45 @@ module.exports = (function (){
 		return this;
 	};
 	/**
-	 * send info to bot
+	 * send log to bot whit type set to info
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom option for single-use (optional)
 	 */
 	this.info = (text, code=null, options=null) => {
-		const param = takeParameters(code,options);
-		send(pathMaker('INFO', text, param.code, param.options));
+		const param = takeParameters(code, options, 'info');
+		//console.log(decodeURI(textFormatter(text, param.code, param.options)));
+		send(pathMaker(text, param.code, param.options));
 	};
 	/**
-	 * send warning to bot
+	 * send log to bot whit type set to warning
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom option for single-use (optional)
 	 */
-	this.warning = (text,code=null, options=null) => {
-		const param = takeParameters(code,options);
-		send(pathMaker('WARNING', text, param.code, param.options));
+	this.warning = (text, code=null, options=null) => {
+		const param = takeParameters(code, options, 'warning');
+		send(pathMaker(text, param.code, param.options));
 	};
 	/**
-	 * send error to bot
+	 * send log to bot with type set to error
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom option for single-use (optional)
 	 */
-	this.error = (text,code=null, options=null) => {
-		const param = takeParameters(code,options);
-		send(pathMaker('ERROR', text, param.code, param.options));
+	this.error = (text, code=null, options=null) => {
+		const param = takeParameters(code, options, 'error');
+		send(pathMaker(text, param.code, param.options));
 	};
 	/**
-	 * send debug log to bot
+	 * send log to bot with type set to debug
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom option for single-use (optional)
 	 */
-	this.debug = (text,code=null, options=null) => {
-		const param = takeParameters(code,options);
-		send(pathMaker('DEBUG', text, param.code, param.options));
+	this.debug = (text, code=null, options=null) => {
+		const param = takeParameters(code, options, 'debug');
+		send(pathMaker(text, param.code, param.options));
 	};
-	
 	return this;
 })();

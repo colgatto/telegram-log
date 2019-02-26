@@ -4,21 +4,13 @@ const tLog = require('..');
 let options = {
 	name: 'awesome project',
 	token: config.token,
-	receivers: config.userId
-};
-
-const shortDate = {
-	dateformat: 'dd/mm/yy'
-};
-
-const noLink = {
-	disableLinkPreview: true
+	receivers: config.receivers
 };
 
 tLog.init(options);
 
 //you can add custom options just for the single log
-tLog.info('User login on https://facebook.com', noLink);
-tLog.warning('Hardisk is almost full', { mode: 'Markdown', silent: true } );
-tLog.error('Internal Server Error', 500, { mode: 'HTML' } );
-tLog.debug('hello guy', 123, shortDate);
+tLog.info('User login on https://facebook.com', { disableLinkPreview: true, template: '{{emojiType}}{{text}}' } );
+tLog.warning('Hardisk `Games` is almost full', { mode: 'Markdown', silent: true, template: 'minimal' } );
+tLog.error('<b>Internal Server Error</b>', 500, { mode: 'HTML' } );
+tLog.debug('hello guy', { template: false } );
