@@ -130,7 +130,7 @@ module.exports = (function (){
 	
 	/**
 	 * initialize logger
-	 * @param {object} options option for the logger, options.token and options.receivers are required
+	 * @param {object} options options for the logger, options.token and options.receivers are required
 	 * @return {telegram-log}
 	 */
 	this.init = (options) => {
@@ -144,7 +144,7 @@ module.exports = (function (){
 	 * send log to bot whit type set to info
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
-	 * @param {object} options custom option for single-use (optional)
+	 * @param {object} options custom options for single-use (optional)
 	 */
 	this.info = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'info');
@@ -155,7 +155,7 @@ module.exports = (function (){
 	 * send log to bot whit type set to warning
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
-	 * @param {object} options custom option for single-use (optional)
+	 * @param {object} options custom options for single-use (optional)
 	 */
 	this.warning = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'warning');
@@ -165,7 +165,7 @@ module.exports = (function (){
 	 * send log to bot with type set to error
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
-	 * @param {object} options custom option for single-use (optional)
+	 * @param {object} options custom options for single-use (optional)
 	 */
 	this.error = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'error');
@@ -175,7 +175,7 @@ module.exports = (function (){
 	 * send log to bot with type set to debug
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
-	 * @param {object} options custom option for single-use (optional)
+	 * @param {object} options custom options for single-use (optional)
 	 */
 	this.debug = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'debug');
