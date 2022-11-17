@@ -18,21 +18,20 @@ module.exports = (function (){
 	};
 
 	const send = (data) => {
+		let p = [];
 		for (let i = 0, l = data.options.receivers.length; i < l; i++) {
-			
-			let req = https.request({
-				host: 'api.telegram.org',
-				method: 'GET',
-				path: data.path + '&chat_id=' + data.options.receivers[i]
-			});
-
-			req.on('error',(err)=>{console.error(err);});
-			//req.on('data',(data)=>{console.log(data);});
-			req.end();
-			
-			//console.log('GET: https://api.telegram.org' + data.path + '&chat_id=' + data.options.receivers[i]);
-			//console.log(decodeURI(data.path));
+			p.push(new Promise((res,rej) => {
+				let req = https.request({
+					host: 'api.telegram.org',
+					method: 'GET',
+					path: data.path + '&chat_id=' + data.options.receivers[i]
+				});
+				req.on('error', e => rej(e) );
+				req.on('close',() => res() );
+				req.end();
+			}));
 		}
+		return Promise.all(p);
 	};
 
 	const typeToEmoji = (type) => {
@@ -145,41 +144,45 @@ module.exports = (function (){
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom options for single-use (optional)
+	 * @return {Promise}
 	 */
 	this.info = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'info');
 		//console.log(decodeURI(textFormatter(text, param.code, param.options)));
-		send(pathMaker(text, param.code, param.options));
+		return send(pathMaker(text, param.code, param.options));
 	};
 	/**
 	 * send log to bot whit type set to warning
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom options for single-use (optional)
+	 * @return {Promise}
 	 */
 	this.warning = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'warning');
-		send(pathMaker(text, param.code, param.options));
+		return send(pathMaker(text, param.code, param.options));
 	};
 	/**
 	 * send log to bot with type set to error
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom options for single-use (optional)
+	 * @return {Promise}
 	 */
 	this.error = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'error');
-		send(pathMaker(text, param.code, param.options));
+		return send(pathMaker(text, param.code, param.options));
 	};
 	/**
 	 * send log to bot with type set to debug
 	 * @param {string} text message to log
 	 * @param {number} code log code (optional)
 	 * @param {object} options custom options for single-use (optional)
+	 * @return {Promise}
 	 */
 	this.debug = (text, code=null, options=null) => {
 		const param = takeParameters(code, options, 'debug');
-		send(pathMaker(text, param.code, param.options));
+		return send(pathMaker(text, param.code, param.options));
 	};
 	return this;
 })();
